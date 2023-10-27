@@ -8,6 +8,12 @@ void usage()
     exit (0);
 }
 
+int int_error(std::string str)
+{
+    std::cout << str << std::endl;
+    return (0);
+}
+
 int die(std::string str)
 {
     std::cout << str << std::endl;

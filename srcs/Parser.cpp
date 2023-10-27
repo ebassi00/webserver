@@ -76,10 +76,43 @@ void Parser::checkConfig(std::string text, std::vector<std::string> &serverBlock
         serverBlocks.push_back(text.substr(start, end - start));
         text = text.substr(0, text.find("server")) + text.substr(text.find("}", end + 1) + 1);
     }
+
+	if (text.find_first_not_of(" \t\n") != std::string::npos)
+		die("All configuration must be inside server blocks.");
 }
 
-// int	Parser::parseLocation(std::string tmp, t_config &conf)
-// {}
+int	Parser::parseLocation(std::string &tmp, t_config &conf)
+{
+	t_location	loc;
+	size_t		start;
+	size_t		end;
+	(void)conf;
+
+	tmp = tmp.substr(8).substr(tmp.find_first_not_of(" \t"));
+	tmp = tmp.substr(tmp.find_first_not_of(" \t"));
+	loc.regex = false;
+	loc.exact_path = false;
+
+	if (tmp.at(0) == '~')
+		loc.regex = true;
+	else if (tmp.at(0) == '=')
+		loc.exact_path = true;
+
+	start = tmp.find_first_not_of(" \t~=");
+	tmp = tmp.substr(start);
+	end = tmp.find_first_of(" \t\n{");
+	loc.location = tmp.substr(0, end);
+	if (loc.location.empty())
+		die("There's no path defined in location.");
+
+	tmp = tmp.substr(tmp.find_first_of(" \t\n{"));
+	start = tmp.find_first_not_of(" \t\n{");
+	end = tmp.find_last_not_of(" \t\n}");
+	loc.text = tmp.substr(start, end - start + 1);
+
+	conf.locationRules.push_back(loc);
+	return (0);
+}
 
 void Parser::checkIfValidIp(std::string value)
 {
@@ -157,7 +190,7 @@ void Parser::checkHost(std::string value, t_config &conf)
 	// controlla se la porta e corretta
 	port = strtol(value.c_str(), NULL, 0);
 	if (port > 65535 || ip < 0)
-		die("Port number must be unsigned short. Aborting");
+		die("Port number must be unsigned short.");
 	conf.port = (unsigned short) port;
 }
 
@@ -187,13 +220,13 @@ void Parser::checkServerName(std::string value, t_config &conf)
 	while (iter != conf.server_name.end())
 	{
 		if ((*iter).find_first_of(".") == std::string::npos)
-			die("Each domain must have at least one dot. Aborting");
+			die("Each domain must have at least one dot.");
 		tmp = *iter;
 		while (tmp.find_first_of(".") != std::string::npos)
 		{
 			tmp = tmp.substr(tmp.find_first_of("."));
 			if (tmp.at(1) == '\0' || tmp.at(1) == '.')
-				die("Server name is of invalid format. Aborting");
+				die("Server name is of invalid format.");
 			tmp = tmp.substr(1);
 		}
 		iter++;
@@ -217,6 +250,104 @@ void Parser::checkAutoIndex(std::string value, t_config &conf)
 		conf.autoindex = false;
 }
 
+void Parser::checkIndex(std::string value, t_config &conf)
+{
+	std::string tmp;
+
+	while (value.find_first_not_of(" \t\n") != std::string::npos)
+	{
+		tmp = value.substr(0, value.find_first_of(" \t"));
+		conf.index.push_back(tmp);
+		if (value.find_first_of(" \t") == std::string::npos)
+			break ;
+		value = value.substr(value.find_first_of(" \t"));
+		value = value.substr(value.find_first_not_of(" \t"));
+	}
+}
+
+void Parser::checkErrorPages(std::string value, t_config &conf)
+{
+	std::string tmp;
+
+	while (value.find_first_not_of(" \t \n") != std::string::npos)
+	{
+		tmp = value.substr(0, value.find_first_of(" \t"));
+		conf.errorPages.push_back(tmp);
+		if (value.find_first_of(" \t") == std::string::npos)
+			break ;
+		value = value.substr(value.find_first_of(" \t"));
+		value = value.substr(value.find_first_not_of(" \t"));
+	}
+}
+
+void Parser::checkClientBodyMaxSize(std::string value, t_config &conf)
+{
+	size_t idx = value.find_first_not_of("0123456789");
+	unsigned long size;
+	size = strtoul(value.c_str(), NULL, 0);
+	if (idx != std::string::npos)
+	{
+		if (value.c_str()[idx + 1] != '\0')
+			die("Write client_max_body_size in an acceptable way.");
+		if (value.at(idx) == 'K')
+			size *= 1024;
+		else if (value.at(idx) == 'M')
+			size *= (1024 * 1024);
+		else if (value.at(idx) == 'B')
+			;
+		else
+			die("Correct units for client_max_body_size are B (bit), K (kilobit), M (megabit).");
+	}
+	conf.client_max_body_size = size;
+}
+
+int Parser::alreadyInMethod(std::string value, t_config &conf)
+{
+	for (std::vector<std::string>::iterator iter = conf.allowedMethods.begin(); iter != conf.allowedMethods.end(); iter++)
+		if (value == *iter)
+			return (1);
+	return (0);
+}
+
+void Parser::checkMethods(std::string value, t_config &conf)
+{
+	std::string methods[5] = {"GET", "POST", "PUT", "DELETE", "HEAD"};
+	std::string tmp;
+	int i;
+
+	if (value.find_first_of(" \t\n") != std::string::npos)
+	{
+		while (value.length())
+		{
+			tmp = value.substr(0, value.find_first_of(" \t\n"));
+			for (i = 0; i < 5; i++)
+			{
+				if (value.compare(methods[i]) && !alreadyInMethod(value, conf))
+				{
+					conf.allowedMethods.push_back(tmp);
+					break ;
+				}
+			}
+			if (i == 5)
+				die("Method not recognized, allowed methods are: GET, POST, PUT, DELETE, HEAD.");
+			if (value.find_first_of(" \t\n") == std::string::npos)
+				break ;
+			value = value.substr(value.find_first_of(" \t\n"));
+			value = value.substr(value.find_first_not_of(" \t\n"));
+		}
+	}
+	else
+	{
+		for (i = 0; i < 5; i++)
+		{
+			if (value.compare(methods[i]) && !alreadyInMethod(value, conf))
+				conf.allowedMethods.push_back(value);
+		}
+		if (i == 5)
+			die("Method not recognized, allowed methods are: GET, POST, PUT, DELETE, HEAD.");
+	}
+}
+
 void Parser::fillConf(std::string key, std::string value, t_config &conf)
 {
 	int	i;
@@ -238,14 +369,14 @@ void Parser::fillConf(std::string key, std::string value, t_config &conf)
 			checkRoot(value, conf); break ;
 		case 3: // auto_index
 			checkAutoIndex(value, conf); break ;
-		// case 4: // index
-		// 	checkIndex(value, conf); break ;
-		// case 5: // error_page
-		// 	checkErrorPages(value, conf); break ;
-		// case 6: // client_max_body_size
-		// 	checkClientBodyMaxSize(value, conf); break ;
-		// case 7:
-		// 	checkMethods(value, conf); break ;
+		case 4: // index
+			checkIndex(value, conf); break ;
+		case 5: // error_page
+			checkErrorPages(value, conf); break ;
+		case 6: // client_max_body_size
+			checkClientBodyMaxSize(value, conf); break ;
+		case 7:
+			checkMethods(value, conf); break ;
 		case 8:
 			break ;
 		default:
@@ -264,8 +395,7 @@ void Parser::addRuleToConf(std::string tmp, t_config &conf)
 	
 	key = tmp.substr(0, tmp.find_first_of(" \t"));
 	if (!key.compare("location"))
-		// parseLocation(tmp, conf);
-		std::cout << "prova";
+		parseLocation(tmp, conf);
 	else
 	{
 		value = tmp.substr(key.length());
@@ -315,7 +445,6 @@ void Parser::initConfig(std::ifstream &configFile, std::vector<t_config> &config
     std::string                 text;
     std::stringstream           buffer;
     std::vector<std::string>    serverBlocks;
-    (void)config;
 
     buffer << configFile.rdbuf();
     text = buffer.str();
@@ -331,4 +460,7 @@ void Parser::initConfig(std::ifstream &configFile, std::vector<t_config> &config
         config.push_back(getServerInfo(*it));
         it++;
     }
+
+	// for (std::vector<std::string>::iterator iter = config[1].files.begin(); iter != config[1].files.end(); iter++)
+	// 	std::cout << *iter << std::endl;
 }
