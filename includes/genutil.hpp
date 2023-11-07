@@ -110,27 +110,27 @@ typedef struct	s_request
 	std::string											method;
 	std::string											path;
 	std::string											arguments;
-	std::vector<std::pair<std::string, std::string> >	headers;
+	std::map<std::string, std::string>					headers;
 	std::string											body;
 
 	s_request()
 	{
-		headers.push_back(std::make_pair("Host", ""));
-		headers.push_back(std::make_pair("User-Agent", ""));
-		headers.push_back(std::make_pair("Accept", ""));
-		headers.push_back(std::make_pair("Accept-Language", ""));
-		headers.push_back(std::make_pair("Accept-Encoding", ""));
-		headers.push_back(std::make_pair("Connection", ""));
-		headers.push_back(std::make_pair("Upgrade-Insecure-Requests", ""));
-		headers.push_back(std::make_pair("Sec-Fetch-Dest", ""));
-		headers.push_back(std::make_pair("Sec-Fetch-Mode", ""));
-		headers.push_back(std::make_pair("Sec-Fetch-Site", ""));
-		headers.push_back(std::make_pair("Sec-Fetch-User", ""));
-		headers.push_back(std::make_pair("Content-Length", ""));
-		headers.push_back(std::make_pair("Content-Type", ""));
-		headers.push_back(std::make_pair("Expect", ""));
-		headers.push_back(std::make_pair("Transfer-Encoding", ""));
-		headers.push_back(std::make_pair("Cookie", ""));
+		headers.insert(std::make_pair("Host", ""));
+		headers.insert(std::make_pair("User-Agent", ""));
+		headers.insert(std::make_pair("Accept", ""));
+		headers.insert(std::make_pair("Accept-Language", ""));
+		headers.insert(std::make_pair("Accept-Encoding", ""));
+		headers.insert(std::make_pair("Connection", ""));
+		headers.insert(std::make_pair("Upgrade-Insecure-Requests", ""));
+		headers.insert(std::make_pair("Sec-Fetch-Dest", ""));
+		headers.insert(std::make_pair("Sec-Fetch-Mode", ""));
+		headers.insert(std::make_pair("Sec-Fetch-Site", ""));
+		headers.insert(std::make_pair("Sec-Fetch-User", ""));
+		headers.insert(std::make_pair("Content-Length", ""));
+		headers.insert(std::make_pair("Content-Type", ""));
+		headers.insert(std::make_pair("Expect", ""));
+		headers.insert(std::make_pair("Transfer-Encoding", ""));
+		headers.insert(std::make_pair("Cookie", ""));
 	};
 	s_request& operator=(s_request const & rhs)
 	{
@@ -147,25 +147,25 @@ typedef struct	s_request
 typedef struct	s_response
 {
 	std::string											line;
-	std::vector<std::pair<std::string, std::string> >	headers;
+	std::map<std::string, std::string>					headers;
 	std::string											body;
 
 	s_response()
 	{
-		headers.push_back(std::make_pair("Server", "webserv"));
-		headers.push_back(std::make_pair("Date", ""));
-		headers.push_back(std::make_pair("Content-Type", ""));
-		headers.push_back(std::make_pair("Content-Length", ""));
-		headers.push_back(std::make_pair("Last-Modified", ""));
-		headers.push_back(std::make_pair("ETag", ""));
-		headers.push_back(std::make_pair("Accept-Ranges", ""));
-		headers.push_back(std::make_pair("Protocol", ""));
-		headers.push_back(std::make_pair("Status-Code", ""));
-		headers.push_back(std::make_pair("Reason-Phrase", ""));
-		headers.push_back(std::make_pair("Location", ""));
-		headers.push_back(std::make_pair("Connection", ""));
-		headers.push_back(std::make_pair("Allow", ""));
-		headers.push_back(std::make_pair("Set-Cookie", ""));
+		headers.insert(std::make_pair("Server", "webserv"));
+		headers.insert(std::make_pair("Date", ""));
+		headers.insert(std::make_pair("Content-Type", ""));
+		headers.insert(std::make_pair("Content-Length", ""));
+		headers.insert(std::make_pair("Last-Modified", ""));
+		headers.insert(std::make_pair("ETag", ""));
+		headers.insert(std::make_pair("Accept-Ranges", ""));
+		headers.insert(std::make_pair("Protocol", ""));
+		headers.insert(std::make_pair("Status-Code", ""));
+		headers.insert(std::make_pair("Reason-Phrase", ""));
+		headers.insert(std::make_pair("Location", ""));
+		headers.insert(std::make_pair("Connection", ""));
+		headers.insert(std::make_pair("Allow", ""));
+		headers.insert(std::make_pair("Set-Cookie", ""));
 	}
 }				t_response;
 
@@ -192,5 +192,6 @@ typedef struct s_connInfo
 int die(std::string str);
 int int_error(std::string str);
 void usage();
+std::map<std::string, std::string>::iterator	findKey(std::map<std::string, std::string> &map, std::string key);
 
 #endif

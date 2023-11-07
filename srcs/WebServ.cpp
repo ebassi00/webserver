@@ -71,7 +71,7 @@ int WebServ::startListen()
     int fdcount = 0;
     int fdsize;
 
-    for (std::vector<Server>::iterator iter = _servers.begin(); iter < _servers.end(); iter++)
+    for (std::vector<Server>::iterator iter = _servers.begin(); iter != _servers.end(); iter++)
         servStock.push(iter->getSocket());
     fdsize = servStock.size();
     this->_pollfds = (struct pollfd*)malloc(sizeof(*_pollfds) * fdsize);
@@ -106,7 +106,7 @@ int WebServ::startListen()
                     else
                     {
                         if (it->handleClient(_pollfds[i].fd) == 1) {
-							delFromPollfds(_pollfds, i, &fdcount);
+							this->delFromPollfds(_pollfds, i, &fdcount);
 						}
                     }
                 }

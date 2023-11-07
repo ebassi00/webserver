@@ -19,3 +19,13 @@ int die(std::string str)
     std::cout << str << std::endl;
     exit (1);
 }
+
+std::map<std::string, std::string>::iterator	findKey(std::map<std::string, std::string> &map, std::string key)
+{
+	for (std::map<std::string, std::string>::iterator iter = map.begin(); iter != map.end(); iter++)
+	{
+		if ((*iter).first == key)
+			return iter;
+	}
+	return map.end();
+}
